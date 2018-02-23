@@ -112,5 +112,9 @@ PDE_DEPS__QUOTED :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 . \
+drivers/OLED \
+drivers/UART \
+drivers/buttons \
 drivers \
+drivers/comparator \
 

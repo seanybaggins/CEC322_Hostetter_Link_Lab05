@@ -162,30 +162,27 @@ ButtonsInit(void)
     //
     // Enable the GPIO port to which the pushbuttons are connected.
     //
-    MAP_SysCtlPeripheralEnable(BUTTONS_GPIO_PERIPH);
+    SysCtlPeripheralEnable(BUTTONS_GPIO_PERIPH);
 
     //
     // Set each of the button GPIO pins as an input with a pull-up.
     //
-    MAP_GPIODirModeSet(BUTTONS_GPIO_BASE, ALL_BUTTONS, GPIO_DIR_MODE_IN);
-    MAP_GPIOPadConfigSet(BUTTONS_GPIO_BASE, ALL_BUTTONS,
+    GPIODirModeSet(BUTTONS_GPIO_BASE, ALL_BUTTONS, GPIO_DIR_MODE_IN);
+    GPIOPadConfigSet(BUTTONS_GPIO_BASE, ALL_BUTTONS,
                          GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
     //
     // Initialize the debounced button state with the current state read from
     // the GPIO bank.
     //
-    g_ui8ButtonStates = MAP_GPIOPinRead(BUTTONS_GPIO_BASE, ALL_BUTTONS);
-
-    // Enable the GPIO port that is used for the on-board LED.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+    g_ui8ButtonStates = GPIOPinRead(BUTTONS_GPIO_BASE, ALL_BUTTONS);
 
     // Check if the peripheral access is enabled.
     while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOG))
     {
     }
 
-    // GPIOPinTypeGPIOOutput(GPIO_PORTG_BASE, GPIO_PIN_2);
+
 }
 
 //*****************************************************************************

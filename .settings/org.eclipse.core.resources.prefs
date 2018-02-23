@@ -1,4 +1,12 @@
 eclipse.preferences.version=1
+encoding//Debug/drivers/OLED/subdir_rules.mk=UTF-8
+encoding//Debug/drivers/OLED/subdir_vars.mk=UTF-8
+encoding//Debug/drivers/UART/subdir_rules.mk=UTF-8
+encoding//Debug/drivers/UART/subdir_vars.mk=UTF-8
+encoding//Debug/drivers/buttons/subdir_rules.mk=UTF-8
+encoding//Debug/drivers/buttons/subdir_vars.mk=UTF-8
+encoding//Debug/drivers/comparator/subdir_rules.mk=UTF-8
+encoding//Debug/drivers/comparator/subdir_vars.mk=UTF-8
 encoding//Debug/drivers/subdir_rules.mk=UTF-8
 encoding//Debug/drivers/subdir_vars.mk=UTF-8
 encoding//Debug/makefile=UTF-8

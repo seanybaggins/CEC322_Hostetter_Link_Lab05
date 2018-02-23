@@ -6,21 +6,21 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-C:/ti/TivaWare_C_Series-2.1.3.156/examples/boards/dk-tm4c123g/drivers/cfal96x64x16.c 
+../drivers/UART/personalUART.c 
 
 C_DEPS += \
-./drivers/cfal96x64x16.d 
+./drivers/UART/personalUART.d 
 
 OBJS += \
-./drivers/cfal96x64x16.obj 
+./drivers/UART/personalUART.obj 
 
 OBJS__QUOTED += \
-"drivers\cfal96x64x16.obj" 
+"drivers\UART\personalUART.obj" 
 
 C_DEPS__QUOTED += \
-"drivers\cfal96x64x16.d" 
+"drivers\UART\personalUART.d" 
 
 C_SRCS__QUOTED += \
-"C:/ti/TivaWare_C_Series-2.1.3.156/examples/boards/dk-tm4c123g/drivers/cfal96x64x16.c" 
+"../drivers/UART/personalUART.c" 
 
 

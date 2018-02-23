@@ -1,3 +1,4 @@
+/* Purpose:*/
 // Base includes with the timers Examples
 #include <stdint.h>
 #include <stdbool.h>
@@ -8,13 +9,13 @@
 #include "driverlib/fpu.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/timer.h"
 #include "driverlib/rom.h"
 #include "grlib/grlib.h"
 #include "drivers/cfal96x64x16.h"
 
 // Necessary for UART
 #include "driverlib/uart.h"
+#include "drivers/UART/personalUART.h"
 #include <string.h>
 
 // Necessary for lower case string conversion
@@ -24,15 +25,13 @@
 #include <stdio.h>
 
 // Necessary for Buttons
-#include "drivers/buttons.h"
+#include "drivers/buttons/buttons.h"
 
 // Necessary for blinking LED
 #include "driverlib/gpio.h"
 
 // Necessary for ADC comparator
-#include "driverlib/comp.c"
-#include "driverlib/comp.h"
-
+#include "drivers/comparator/comparator.h"
 
 //****************************************************************************
 // Defines and typedefs
@@ -52,26 +51,55 @@ typedef enum {
     DISPLAY_OFF = 0, DISPLAY_NUMBER = 1, DISPLAY_BAR = 2, DISPLAY_COUNT = 3
 } DisplayMode;
 
+// Necessary for keeping track of last button pressed
+typedef enum {
+    LEFT, RIGHT, UP, DOWN, SELECT, UNDEFINED
+} LastButtonPressed;
 //****************************************************************************
 // Globals
 //****************************************************************************
-static tContext sContext;
-static uint32_t countsPerSecond;
-static uint32_t characterFromComputer;
-static bool enableCounter;
-static DisplayMode servicedDisplay;
-static DisplayMode requestedDisplay;
+tContext sContext;
+uint32_t characterFromComputer;
+uint32_t timesCrossed1Point6Volts;
+uint8_t menuSelection;
 
 //*****************************************************************************
 // Prototypes
 //*****************************************************************************
-void diplayADCInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
+void diplayInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
                           uint32_t yLocationOnDisplay, DisplayMode displayMode);
 void clearBlack(void);
 void UARTSend(const uint8_t *pui8Buffer);
 void printMainMenu(void);
 void diplaySplashOnOLED(void);
 
+
+void IntComp0(void) {
+    ComparatorIntClear(COMP_BASE, 0);
+    clearBlack();
+    timesCrossed1Point6Volts++;
+    diplayInfoOnBoard("#Crossed %d", timesCrossed1Point6Volts, 25, DISPLAY_NUMBER);
+}
+
+
+void IntUART0(void) {
+    uint32_t ui32Status;
+
+    // Get the interrupt status.
+    ui32Status = UARTIntStatus(UART0_BASE, true);
+
+    // Clear the asserted interrupts.
+    UARTIntClear(UART0_BASE, ui32Status);
+
+    // Get the character from the UART buffer
+    while(UARTCharsAvail(UART0_BASE)) {
+        menuSelection = (uint8_t)UARTCharGetNonBlocking(UART0_BASE);
+    }
+
+
+    //UARTIntClear(UART0_BASE, UART_INT_RX | UART_INT_RT);
+    diplayInfoOnBoard("h %d", 1, 50, DISPLAY_NUMBER);
+}
 
 int
 main(void)
@@ -91,7 +119,6 @@ main(void)
     // Disabling all Interrupts
     IntMasterDisable();
 
-
     // Initialize the graphics context and find the middle X coordinate.
     GrContextInit(&sContext, &g_sCFAL96x64x16);
     GrContextFontSet(&sContext, g_psFontFixed6x8);
@@ -99,36 +126,22 @@ main(void)
     //************************************************************************
     // Enabling the peripherals
     //************************************************************************
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);     // For UART
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_COMP0);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);      // For LED
 
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);      // For LED
     //*************************************************************************
     // Checking if the peripheral is turned on
     //*************************************************************************
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_UART0) ||
-            !SysCtlPeripheralReady(SYSCTL_PERIPH_COMP0) ||
-            !SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOA) ||
-            !SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOG));
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOG));
 
     //*************************************************************************
     // Configuration
     //*************************************************************************
-    // Undergoing on set up steps for the buttons
-    ButtonsInit();
 
-    // UART for 115,200, 8-N-1 operation.
-    // Configure the UART for 115,200, 8-N-1 operation.
-    UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
-                            (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
-                             UART_CONFIG_PAR_NONE));
 
-    // Configuring the internal reference for the comparator
-    ComparatorRefSet(COMP_BASE, COMP_REF_1_65V);
+    setupUART();
 
-    ComparatorConfigure(COMP_BASE, 0, COMP_TRIG_NONE | COMP_INT_BOTH |
-                        COMP_ASRCP_REF | COMP_OUTPUT_NORMAL);
+
+    setupComparator();
 
     // Enable the GPIO pin for the LED (PG2).  Set the direction as output, and
     // enable the GPIO pin for digital function.
@@ -139,21 +152,14 @@ main(void)
     //************************************************************************
     IntMasterEnable();
 
-    //
-    // Enable the timers.
-    //
-    TimerEnable(TIMER0_BASE, TIMER_A);
-    TimerEnable(TIMER1_BASE, TIMER_A);
+
 
     //************************************************************************
     // Initializing Variables
     //************************************************************************
     uint32_t blinkingLightCounter = 0;
-    countsPerSecond = 0;
-    servicedDisplay = DISPLAY_NUMBER;
-    requestedDisplay = DISPLAY_NUMBER;
     bool enableLED = 1;
-    enableCounter = 0;
+    timesCrossed1Point6Volts = 0;
 
     //************************************************************************
     // starting functional calls and main while loop
@@ -165,14 +171,10 @@ main(void)
     // Displaying UART Menu
     printMainMenu();
 
-    // Clearing interrupt flag for the ADC
-    ADCIntClear(ADC0_BASE, ADC_SEQUENCE_3);
-
-    // Start reading the ADC
-    ADCProcessorTrigger(ADC0_BASE, ADC_SEQUENCE_3);
 
     while(tolower(characterFromComputer != 'q'))
     {
+
         // Blinking the LED
         if (blinkingLightCounter %
                 (FIVE_PERCENT_CYCLE_ON + NIENTYFIVE_PERCENT_CYCLE_OFF) <=
@@ -186,6 +188,7 @@ main(void)
         //********************************************************************
         // Functional calls dependent on menu selection
         //********************************************************************
+        /*
         switch(tolower(characterFromComputer)) {
             case 't' :
                 enableLED = !enableLED;
@@ -197,28 +200,28 @@ main(void)
                 IntMasterEnable();
                 break;
             case 'c' :
-                enableCounter = !enableCounter;
+
                 break;
             case '1' :
                 // Toggle the display
-                requestedDisplay = (requestedDisplay + 1) % DISPLAY_COUNT;
+
                 break;
             case '2' :
                 // Toggle the display
-                servicedDisplay = (servicedDisplay + 1) % DISPLAY_COUNT;
+
                 break;
         }
         // Changing charter to null manually in case the interrupt does
         // not trigger in time
         characterFromComputer = '\0';
-
+*/
         blinkingLightCounter++;
     }
-    clearBlack();
+    //clearBlack();
 }
 
 // Purpose: Display data to the OLED display
-void diplayADCInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
+void diplayInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
                           uint32_t yLocationOnDisplay, DisplayMode displayMode) {
     if(displayMode == DISPLAY_NUMBER) {
         uint8_t displayDataBuffer[16];
@@ -298,7 +301,12 @@ void diplaySplashOnOLED(void) {
 
 }
 
-// Print the main menu to the UART Console
+// Purpose: Print the main menu to the UART Console
+// Note to grader: I am keeping the multiple successive calls
+// beacuse it reads better and I do not want to have one long string that
+// goes past the 80th character. I think it is justified having slightly less
+// Efficient code if the code reads better and the code in question is user driven
+// and does not need to run as fast as possible.
 void printMainMenu(void) {
     UARTSend("\r\n\nT - Toggle the LED\r\n");
     UARTSend("S - Splash Screen (2s)\r\n");

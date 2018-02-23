@@ -12,8 +12,11 @@ GEN_CMDS__FLAG :=
 ORDERED_OBJS += \
 "./Lab5_Interrupts.obj" \
 "./startup_ccs.obj" \
-"./drivers/buttons.obj" \
+"./drivers/OLED/displays.obj" \
+"./drivers/UART/personalUART.obj" \
+"./drivers/buttons/buttons.obj" \
 "./drivers/cfal96x64x16.obj" \
+"./drivers/comparator/comparator.obj" \
 "../timers_ccs.cmd" \
 $(GEN_CMDS__FLAG) \
 -llibc.a \
@@ -28,9 +31,17 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include drivers/OLED/subdir_vars.mk
+-include drivers/UART/subdir_vars.mk
+-include drivers/buttons/subdir_vars.mk
 -include drivers/subdir_vars.mk
+-include drivers/comparator/subdir_vars.mk
 -include subdir_rules.mk
+-include drivers/OLED/subdir_rules.mk
+-include drivers/UART/subdir_rules.mk
+-include drivers/buttons/subdir_rules.mk
 -include drivers/subdir_rules.mk
+-include drivers/comparator/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -146,7 +157,7 @@ all: CEC322_Hostetter_Link_Lab05.out
 CEC322_Hostetter_Link_Lab05.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.6.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O4 --advice:power=all -g --c99 --gcc --define=ccs="ccs" --define=PART_TM4C123GH6PGE --define=TARGET_IS_TM4C123_RB1 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --ual -z -m"timers_ccs.map" --stack_size=1024 --heap_size=0 -i"C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.6.LTS/lib" -i"C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.6.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="CEC322_Hostetter_Link_Lab05_linkInfo.xml" --rom_model -o "CEC322_Hostetter_Link_Lab05.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.6.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -Ooff --advice:power=all -g --c99 --gcc --define=ccs="ccs" --define=PART_TM4C123GH6PGE --define=TARGET_IS_TM4C123_RB1 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --ual -z -m"timers_ccs.map" --stack_size=1024 --heap_size=0 -i"C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.6.LTS/lib" -i"C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.6.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="CEC322_Hostetter_Link_Lab05_linkInfo.xml" --rom_model -o "CEC322_Hostetter_Link_Lab05.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -162,8 +173,8 @@ CEC322_Hostetter_Link_Lab05.bin: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "Lab5_Interrupts.obj" "startup_ccs.obj" "drivers\buttons.obj" "drivers\cfal96x64x16.obj" 
-	-$(RM) "Lab5_Interrupts.d" "startup_ccs.d" "drivers\buttons.d" "drivers\cfal96x64x16.d" 
+	-$(RM) "Lab5_Interrupts.obj" "startup_ccs.obj" "drivers\OLED\displays.obj" "drivers\UART\personalUART.obj" "drivers\buttons\buttons.obj" "drivers\cfal96x64x16.obj" "drivers\comparator\comparator.obj" 
+	-$(RM) "Lab5_Interrupts.d" "startup_ccs.d" "drivers\OLED\displays.d" "drivers\UART\personalUART.d" "drivers\buttons\buttons.d" "drivers\cfal96x64x16.d" "drivers\comparator\comparator.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
