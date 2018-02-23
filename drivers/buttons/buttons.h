@@ -57,6 +57,17 @@
 // Interrupts
 //*****************************************************************************
 extern void IntButtons(void);
+
+//****************************************************************************
+// Enum to keep track of the last button pressed and count
+//****************************************************************************
+typedef enum {
+    LEFT, RIGHT, UP, DOWN, SELECT, UNDEFINED
+} LastButtonPressed;
+
+typedef struct {
+    uint32_t timesPressed;
+} Button;
 //*****************************************************************************
 //
 // Useful macros for detecting button events.

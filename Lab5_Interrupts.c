@@ -51,10 +51,6 @@ typedef enum {
     DISPLAY_OFF = 0, DISPLAY_NUMBER = 1, DISPLAY_BAR = 2, DISPLAY_COUNT = 3
 } DisplayMode;
 
-// Necessary for keeping track of last button pressed
-typedef enum {
-    LEFT, RIGHT, UP, DOWN, SELECT, UNDEFINED
-} LastButtonPressed;
 //****************************************************************************
 // Globals
 //****************************************************************************
@@ -62,11 +58,12 @@ tContext sContext;
 uint32_t characterFromComputer;
 uint32_t timesCrossed1Point6Volts;
 uint8_t menuSelection;
-
+Button leftButton, rightButton, upButton, downButton, selectButton;
+LastButtonPressed lastButtonPressed;
 //*****************************************************************************
 // Prototypes
 //*****************************************************************************
-void diplayInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
+void displayInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
                           uint32_t yLocationOnDisplay, DisplayMode displayMode);
 void clearBlack(void);
 void UARTSend(const uint8_t *pui8Buffer);
@@ -75,14 +72,39 @@ void diplaySplashOnOLED(void);
 
 void IntButtons(void) {
     GPIOIntClear(BUTTONS_GPIO_BASE, ALL_BUTTONS);
-    diplayInfoOnBoard("j %d", 1, 50, DISPLAY_NUMBER);
+    int32_t buttonPressed = GPIOPinRead(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+    switch (buttonPressed) {
+        case (ALL_BUTTONS ^ LEFT_BUTTON) :
+            leftButton.timesPressed++;
+            lastButtonPressed = LEFT;
+            break;
+        case (ALL_BUTTONS ^ RIGHT_BUTTON) :
+            rightButton.timesPressed++;
+            lastButtonPressed = RIGHT;
+            break;
+        case (ALL_BUTTONS ^ UP_BUTTON) :
+            upButton.timesPressed++;
+            lastButtonPressed = UP;
+            break;
+        case (ALL_BUTTONS ^ DOWN_BUTTON) :
+            downButton.timesPressed++;
+            lastButtonPressed = DOWN;
+            break;
+        case (ALL_BUTTONS ^ SELECT_BUTTON) :
+            selectButton.timesPressed++;
+            lastButtonPressed = SELECT;
+            break;
+        default :
+            lastButtonPressed = UNDEFINED;
+    }
+    displayInfoOnBoard("%d", leftButton.timesPressed, 35, DISPLAY_NUMBER);
 }
 
 void IntComp0(void) {
     ComparatorIntClear(COMP_BASE, 0);
     clearBlack();
     timesCrossed1Point6Volts++;
-    diplayInfoOnBoard("#Crossed %d", timesCrossed1Point6Volts, 25, DISPLAY_NUMBER);
+    displayInfoOnBoard("#Crossed %d", timesCrossed1Point6Volts, 25, DISPLAY_NUMBER);
 }
 
 
@@ -100,8 +122,7 @@ void IntUART0(void) {
         menuSelection = (uint8_t)UARTCharGetNonBlocking(UART0_BASE);
     }
 
-    //UARTIntClear(UART0_BASE, UART_INT_RX | UART_INT_RT);
-    diplayInfoOnBoard("h %d", 1, 50, DISPLAY_NUMBER);
+    displayInfoOnBoard("h %d", 1, 50, DISPLAY_NUMBER);
 }
 
 int
@@ -163,6 +184,13 @@ main(void)
     uint32_t blinkingLightCounter = 0;
     bool enableLED = 1;
     timesCrossed1Point6Volts = 0;
+    menuSelection = '\0';
+    lastButtonPressed = UNDEFINED;
+    leftButton.timesPressed = 0;
+    rightButton.timesPressed = 0;
+    upButton.timesPressed = 0;
+    downButton.timesPressed = 0;
+    selectButton.timesPressed = 0;
 
     //************************************************************************
     // starting functional calls and main while loop
@@ -224,7 +252,7 @@ main(void)
 }
 
 // Purpose: Display data to the OLED display
-void diplayInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
+void displayInfoOnBoard(uint8_t* formatString,uint32_t ADCValue,
                           uint32_t yLocationOnDisplay, DisplayMode displayMode) {
     if(displayMode == DISPLAY_NUMBER) {
         uint8_t displayDataBuffer[16];
