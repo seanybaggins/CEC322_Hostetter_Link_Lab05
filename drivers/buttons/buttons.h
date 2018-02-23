@@ -53,7 +53,10 @@
 
 #define ALL_BUTTONS             (LEFT_BUTTON | RIGHT_BUTTON | UP_BUTTON |     \
                                  DOWN_BUTTON | SELECT_BUTTON)
-
+//*****************************************************************************
+// Interrupts
+//*****************************************************************************
+extern void IntButtons(void);
 //*****************************************************************************
 //
 // Useful macros for detecting button events.

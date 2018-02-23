@@ -159,29 +159,24 @@ ButtonsPoll(uint8_t *pui8Delta, uint8_t *pui8RawState)
 void
 ButtonsInit(void)
 {
-    //
     // Enable the GPIO port to which the pushbuttons are connected.
-    //
     SysCtlPeripheralEnable(BUTTONS_GPIO_PERIPH);
 
-    //
+    // Check if the peripheral access is enabled.
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOG));
+
     // Set each of the button GPIO pins as an input with a pull-up.
-    //
     GPIODirModeSet(BUTTONS_GPIO_BASE, ALL_BUTTONS, GPIO_DIR_MODE_IN);
     GPIOPadConfigSet(BUTTONS_GPIO_BASE, ALL_BUTTONS,
                          GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
-    //
     // Initialize the debounced button state with the current state read from
     // the GPIO bank.
-    //
     g_ui8ButtonStates = GPIOPinRead(BUTTONS_GPIO_BASE, ALL_BUTTONS);
 
-    // Check if the peripheral access is enabled.
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOG))
-    {
-    }
-
+    GPIOIntEnable(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+    GPIOIntRegister(BUTTONS_GPIO_BASE, IntButtons);
+    GPIOIntClear(BUTTONS_GPIO_BASE, ALL_BUTTONS);
 
 }
 

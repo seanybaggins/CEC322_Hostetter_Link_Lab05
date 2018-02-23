@@ -73,6 +73,10 @@ void UARTSend(const uint8_t *pui8Buffer);
 void printMainMenu(void);
 void diplaySplashOnOLED(void);
 
+void IntButtons(void) {
+    GPIOIntClear(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+    diplayInfoOnBoard("j %d", 1, 50, DISPLAY_NUMBER);
+}
 
 void IntComp0(void) {
     ComparatorIntClear(COMP_BASE, 0);
@@ -95,7 +99,6 @@ void IntUART0(void) {
     while(UARTCharsAvail(UART0_BASE)) {
         menuSelection = (uint8_t)UARTCharGetNonBlocking(UART0_BASE);
     }
-
 
     //UARTIntClear(UART0_BASE, UART_INT_RX | UART_INT_RT);
     diplayInfoOnBoard("h %d", 1, 50, DISPLAY_NUMBER);
@@ -136,7 +139,7 @@ main(void)
     //*************************************************************************
     // Configuration
     //*************************************************************************
-
+    ButtonsInit();
 
     setupUART();
 
