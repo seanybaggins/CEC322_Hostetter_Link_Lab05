@@ -174,9 +174,11 @@ ButtonsInit(void)
     // the GPIO bank.
     g_ui8ButtonStates = GPIOPinRead(BUTTONS_GPIO_BASE, ALL_BUTTONS);
 
-    GPIOIntEnable(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+    GPIOIntTypeSet(BUTTONS_GPIO_BASE, (uint8_t)ALL_BUTTONS, GPIO_FALLING_EDGE);
     GPIOIntRegister(BUTTONS_GPIO_BASE, IntButtons);
     GPIOIntClear(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+    GPIOIntEnable(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+
 
 }
 

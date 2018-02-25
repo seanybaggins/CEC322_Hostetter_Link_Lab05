@@ -70,34 +70,47 @@ void UARTSend(const uint8_t *pui8Buffer);
 void printMainMenu(void);
 void diplaySplashOnOLED(void);
 
+uint32_t buttonCounter;
 void IntButtons(void) {
     GPIOIntClear(BUTTONS_GPIO_BASE, ALL_BUTTONS);
     int32_t buttonPressed = GPIOPinRead(BUTTONS_GPIO_BASE, ALL_BUTTONS);
-    switch (buttonPressed) {
-        case (ALL_BUTTONS ^ LEFT_BUTTON) :
+    switch (~buttonPressed & ALL_BUTTONS) {
+        case (LEFT_BUTTON) :
+            clearBlack();
             leftButton.timesPressed++;
-            lastButtonPressed = LEFT;
+            displayInfoOnBoard("Left %d", leftButton.timesPressed, 35, DISPLAY_NUMBER);
             break;
-        case (ALL_BUTTONS ^ RIGHT_BUTTON) :
+        case (RIGHT_BUTTON) :
+            clearBlack();
             rightButton.timesPressed++;
-            lastButtonPressed = RIGHT;
+            displayInfoOnBoard("Right %d", rightButton.timesPressed, 35, DISPLAY_NUMBER);
             break;
-        case (ALL_BUTTONS ^ UP_BUTTON) :
+        case (UP_BUTTON) :
+            clearBlack();
             upButton.timesPressed++;
-            lastButtonPressed = UP;
+            displayInfoOnBoard("Up %d", upButton.timesPressed, 35, DISPLAY_NUMBER);
             break;
-        case (ALL_BUTTONS ^ DOWN_BUTTON) :
+        case (DOWN_BUTTON) :
+            clearBlack();
             downButton.timesPressed++;
-            lastButtonPressed = DOWN;
+            displayInfoOnBoard("Down %d", downButton.timesPressed, 35, DISPLAY_NUMBER);
             break;
-        case (ALL_BUTTONS ^ SELECT_BUTTON) :
+        case (SELECT_BUTTON) :
+            clearBlack();
             selectButton.timesPressed++;
-            lastButtonPressed = SELECT;
+            displayInfoOnBoard("Select %d", selectButton.timesPressed, 35, DISPLAY_NUMBER);
+            break;
+        case 0 :
             break;
         default :
-            lastButtonPressed = UNDEFINED;
+            clearBlack();
+            displayInfoOnBoard("Undefined", -1, 35, DISPLAY_NUMBER);
+            break;
     }
-    displayInfoOnBoard("%d", leftButton.timesPressed, 35, DISPLAY_NUMBER);
+    int delay;
+    for (delay = 0; delay < 2000000; delay++);
+    buttonCounter++;
+    displayInfoOnBoard("count %d", buttonCounter, 50, DISPLAY_NUMBER);
 }
 
 void IntComp0(void) {
@@ -119,10 +132,8 @@ void IntUART0(void) {
 
     // Get the character from the UART buffer
     while(UARTCharsAvail(UART0_BASE)) {
-        menuSelection = (uint8_t)UARTCharGetNonBlocking(UART0_BASE);
+        menuSelection = tolower((uint8_t)UARTCharGetNonBlocking(UART0_BASE));
     }
-
-    displayInfoOnBoard("h %d", 1, 50, DISPLAY_NUMBER);
 }
 
 int
@@ -182,6 +193,7 @@ main(void)
     // Initializing Variables
     //************************************************************************
     uint32_t blinkingLightCounter = 0;
+    bool exitProgram = false;
     bool enableLED = 1;
     timesCrossed1Point6Volts = 0;
     menuSelection = '\0';
@@ -191,6 +203,9 @@ main(void)
     upButton.timesPressed = 0;
     downButton.timesPressed = 0;
     selectButton.timesPressed = 0;
+
+
+    buttonCounter = 0;
 
     //************************************************************************
     // starting functional calls and main while loop
@@ -203,7 +218,7 @@ main(void)
     printMainMenu();
 
 
-    while(tolower(characterFromComputer != 'q'))
+    while(exitProgram == false)
     {
 
         // Blinking the LED
@@ -219,8 +234,8 @@ main(void)
         //********************************************************************
         // Functional calls dependent on menu selection
         //********************************************************************
-        /*
-        switch(tolower(characterFromComputer)) {
+
+        switch(menuSelection) {
             case 't' :
                 enableLED = !enableLED;
                 break;
@@ -230,25 +245,14 @@ main(void)
                 diplaySplashOnOLED();
                 IntMasterEnable();
                 break;
-            case 'c' :
-
-                break;
-            case '1' :
-                // Toggle the display
-
-                break;
-            case '2' :
-                // Toggle the display
-
+            case 'q' :
+                exitProgram = true;
                 break;
         }
-        // Changing charter to null manually in case the interrupt does
-        // not trigger in time
-        characterFromComputer = '\0';
-*/
+        menuSelection = '\0';
         blinkingLightCounter++;
     }
-    //clearBlack();
+    clearBlack();
 }
 
 // Purpose: Display data to the OLED display
@@ -341,9 +345,6 @@ void diplaySplashOnOLED(void) {
 void printMainMenu(void) {
     UARTSend("\r\n\nT - Toggle the LED\r\n");
     UARTSend("S - Splash Screen (2s)\r\n");
-    UARTSend("1 - Toggle Data Display Requested\n\r");
-    UARTSend("2 - Toggle Data Display Serviced\n\r");
-    UARTSend("C - Toggle Count Display\n\r");
     UARTSend("Q - Quit Program \n\r");
 }
 
