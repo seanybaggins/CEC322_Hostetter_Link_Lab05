@@ -2,7 +2,7 @@
  * Configuration.c
  *
  *  Created on: Feb 20, 2018
- *      Author: Sean
+ *      Author: Sean Link and Andrew Hostetter
  */
 #include "driverlib/comp.c"
 #include "driverlib/comp.h"
@@ -10,6 +10,7 @@
 #include "driverlib/sysctl.h"
 #include "comparator.h"
 
+// Purpose: Turn on and fully configure the comparator.
 void setupComparator(void) {
     // Turn on peripheral
     SysCtlPeripheralEnable(SYSCTL_PERIPH_COMP0);

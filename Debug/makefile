@@ -12,6 +12,7 @@ GEN_CMDS__FLAG :=
 ORDERED_OBJS += \
 "./Lab5_Interrupts.obj" \
 "./startup_ccs.obj" \
+"./drivers/LED/LED.obj" \
 "./drivers/OLED/displays.obj" \
 "./drivers/UART/personalUART.obj" \
 "./drivers/buttons/buttons.obj" \
@@ -31,12 +32,14 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include drivers/LED/subdir_vars.mk
 -include drivers/OLED/subdir_vars.mk
 -include drivers/UART/subdir_vars.mk
 -include drivers/buttons/subdir_vars.mk
 -include drivers/subdir_vars.mk
 -include drivers/comparator/subdir_vars.mk
 -include subdir_rules.mk
+-include drivers/LED/subdir_rules.mk
 -include drivers/OLED/subdir_rules.mk
 -include drivers/UART/subdir_rules.mk
 -include drivers/buttons/subdir_rules.mk
@@ -173,8 +176,8 @@ CEC322_Hostetter_Link_Lab05.bin: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "Lab5_Interrupts.obj" "startup_ccs.obj" "drivers\OLED\displays.obj" "drivers\UART\personalUART.obj" "drivers\buttons\buttons.obj" "drivers\cfal96x64x16.obj" "drivers\comparator\comparator.obj" 
-	-$(RM) "Lab5_Interrupts.d" "startup_ccs.d" "drivers\OLED\displays.d" "drivers\UART\personalUART.d" "drivers\buttons\buttons.d" "drivers\cfal96x64x16.d" "drivers\comparator\comparator.d" 
+	-$(RM) "Lab5_Interrupts.obj" "startup_ccs.obj" "drivers\LED\LED.obj" "drivers\OLED\displays.obj" "drivers\UART\personalUART.obj" "drivers\buttons\buttons.obj" "drivers\cfal96x64x16.obj" "drivers\comparator\comparator.obj" 
+	-$(RM) "Lab5_Interrupts.d" "startup_ccs.d" "drivers\LED\LED.d" "drivers\OLED\displays.d" "drivers\UART\personalUART.d" "drivers\buttons\buttons.d" "drivers\cfal96x64x16.d" "drivers\comparator\comparator.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
